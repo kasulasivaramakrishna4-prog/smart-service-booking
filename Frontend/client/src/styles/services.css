@@ -1,0 +1,55 @@
+.services-container {
+  width: 80%;
+  margin: auto;
+  margin-top: 20px;
+}
+
+.service-card {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0px 0px 10px #ddd;
+}
+
+.service-card button {
+  padding: 10px 15px;
+  border: none;
+  background-color: #222;
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-right: 10px;
+}
+
+.booking-inputs input {
+  padding: 10px;
+  margin-right: 10px;
+}
+
+.add-service-form {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 25px;
+  box-shadow: 0px 0px 10px #eee;
+}
+
+.add-service-form h3 {
+  margin-top: 0;
+}
+
+.add-service-form input {
+  padding: 10px;
+  margin-right: 10px;
+  margin-bottom: 10px;
+}
+
+.add-service-form button {
+  padding: 10px 15px;
+  border: none;
+  background-color: #222;
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+}
