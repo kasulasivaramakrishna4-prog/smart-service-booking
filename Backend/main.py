@@ -1,26 +1,31 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes.user_routes import router as user_router
-from routes.service_routes import router as service_router
-from routes.booking_routes import router as booking_router
+from database import engine, Base
+
+from models.user_model import User
+from models.service_model import Service
+from models.booking_model import Booking
+
+from routes import user_routes
+from routes import service_routes
+from routes import booking_routes
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "https://smart-service-booking-one.vercel.app"
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(user_router)
-app.include_router(service_router)
-app.include_router(booking_router)
+app.include_router(user_routes.router)
+app.include_router(service_routes.router)
+app.include_router(booking_routes.router)
 
 @app.get("/")
 def home():
