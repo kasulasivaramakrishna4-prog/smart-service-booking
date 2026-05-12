@@ -7,6 +7,7 @@ import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import Services from "./pages/Services";
 import Bookings from "./pages/Bookings";
+import MyBookings from "./pages/MyBookings";
 
 import "./styles/app.css";
 
@@ -52,14 +53,18 @@ function App() {
         )}
 
         {user?.role === "user" && (
-          <button onClick={() => setPage("services")}>Services</button>
+          <>
+            <button onClick={() => setPage("services")}>Services</button>
+            <button onClick={() => setPage("my-bookings")}>My Bookings</button>
+          </>
         )}
       </div>
 
       {page === "signup" && <Signup />}
       {page === "login" && <Login onLogin={handleLogin} />}
       {page === "services" && <Services />}
-      {page === "bookings" && <Bookings />}
+      {page === "bookings" && user?.role === "admin" && <Bookings />}
+      {page === "my-bookings" && user?.role === "user" && <MyBookings />}
 
       <Footer />
     </div>

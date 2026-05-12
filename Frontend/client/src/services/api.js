@@ -82,6 +82,11 @@ export async function getBookings() {
   return parseResponse(response, "Unable to load bookings");
 }
 
+export async function getUserBookings(userId) {
+  const response = await fetch(`${BASE_URL}/bookings/user/${userId}`);
+  return parseResponse(response, "Unable to load your bookings");
+}
+
 export async function updateBookingStatus(bookingId, status) {
   const response = await fetch(`${BASE_URL}/bookings/${bookingId}/status`, {
     method: "PUT",

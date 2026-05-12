@@ -88,6 +88,27 @@ def get_bookings(db: Session = Depends(get_db)):
     return booking_list
 
 
+@router.get("/bookings/user/{user_id}")
+def get_user_bookings(user_id: int, db: Session = Depends(get_db)):
+    bookings = db.query(Booking).filter(Booking.user_id == user_id).all()
+
+    booking_list = []
+
+    for booking in bookings:
+        service = db.query(Service).filter(Service.id == booking.service_id).first()
+
+        booking_list.append({
+            "id": booking.id,
+            "service_name": service.service_name if service else "Service not found",
+            "phone": booking.phone,
+            "booking_date": booking.booking_date,
+            "booking_time": booking.booking_time,
+            "status": booking.status
+        })
+
+    return booking_list
+
+
 # UPDATE STATUS API
 @router.put("/bookings/{booking_id}/status")
 def update_booking_status(
