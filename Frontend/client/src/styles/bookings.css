@@ -54,3 +54,23 @@
   color: black;
   transform: scale(1.03);
 }
+
+.my-booking-card {
+  border-left: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.my-booking-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.my-booking-details {
+  display: grid;
+  gap: 4px;
+}

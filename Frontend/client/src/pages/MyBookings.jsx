@@ -3,10 +3,34 @@ import { deleteBookingById, getUserBookings } from "../services/api";
 import popup, { showLoading } from "../utils/notifications";
 import "../styles/bookings.css";
 
+import acImage from "../images/ac.jpg";
+import bikeImage from "../images/bike.jpg";
+import carImage from "../images/car.jpg";
+import cctvImage from "../images/cctv.jpg";
+import laptopImage from "../images/laptop.jpg";
+import refrigeratorImage from "../images/refrigerator.jpg";
+import tvImage from "../images/tv.jpg";
+import washingImage from "../images/washing.jpg";
+import waterImage from "../images/water.jpg";
+
 function MyBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const user = JSON.parse(localStorage.getItem("user"));
+
+  const getImage = (serviceName) => {
+    if (serviceName.includes("AC")) return acImage;
+    if (serviceName.includes("Bike")) return bikeImage;
+    if (serviceName.includes("Car")) return carImage;
+    if (serviceName.includes("CCTV")) return cctvImage;
+    if (serviceName.includes("Laptop")) return laptopImage;
+    if (serviceName.includes("Refrigerator")) return refrigeratorImage;
+    if (serviceName.includes("TV")) return tvImage;
+    if (serviceName.includes("Washing")) return washingImage;
+    if (serviceName.includes("Water")) return waterImage;
+
+    return acImage;
+  };
 
   useEffect(() => {
     fetchMyBookings();
@@ -88,12 +112,16 @@ function MyBookings() {
         <h3>No bookings found</h3>
       ) : (
         bookings.map((booking) => (
-          <div className="booking-card" key={booking.id}>
-            <p>Service Name: {booking.service_name}</p>
-            <p>Phone: {booking.phone}</p>
-            <p>Date: {booking.booking_date}</p>
-            <p>Time: {booking.booking_time}</p>
-            <p>Status: {booking.status}</p>
+          <div className="booking-card my-booking-card" key={booking.id}>
+            <img src={getImage(booking.service_name)} alt="service" />
+
+            <div className="my-booking-details">
+              <p>Service Name: {booking.service_name}</p>
+              <p>Phone: {booking.phone}</p>
+              <p>Date: {booking.booking_date}</p>
+              <p>Time: {booking.booking_time}</p>
+              <p>Status: {booking.status}</p>
+            </div>
 
             <button type="button" onClick={() => deleteBooking(booking.id)}>
               Cancel/Delete
