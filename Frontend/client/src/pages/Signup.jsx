@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { signupUser } from "../services/api";
+import popup, { showLoading } from "../utils/notifications";
 import "../styles/form.css";
 
 function Signup() {
@@ -9,6 +10,7 @@ function Signup() {
     password: "",
     role: "user",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -20,16 +22,33 @@ function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const result = await signupUser(formData);
+    setIsSubmitting(true);
+    showLoading("Creating Account", "Please wait while we set up your account.");
 
-    alert(result.message || "Something went wrong");
+    try {
+      const result = await signupUser(formData);
 
-    setFormData({
-      name: "",
-      email: "",
-      password: "",
-      role: "user",
-    });
+      await popup.fire({
+        icon: "success",
+        title: "Signup Successful",
+        text: result.message || "Your account has been created successfully.",
+      });
+
+      setFormData({
+        name: "",
+        email: "",
+        password: "",
+        role: "user",
+      });
+    } catch (error) {
+      popup.fire({
+        icon: "error",
+        title: "Signup Failed",
+        text: error.message || "Something went wrong.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -61,7 +80,9 @@ function Signup() {
           onChange={handleChange}
         />
 
-        <button type="submit">Signup</button>
+        <button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Signing up..." : "Signup"}
+        </button>
       </form>
     </div>
   );

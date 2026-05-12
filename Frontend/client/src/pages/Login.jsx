@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { loginUser } from "../services/api";
+import popup, { showLoading } from "../utils/notifications";
 import "../styles/form.css";
 
 function Login({ onLogin }) {
@@ -7,6 +8,7 @@ function Login({ onLogin }) {
     email: "",
     password: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -18,21 +20,34 @@ function Login({ onLogin }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const result = await loginUser(formData);
+    setIsSubmitting(true);
+    showLoading("Signing In", "Checking your account details.");
 
-    alert(result.message || "Login failed");
+    try {
+      const result = await loginUser(formData);
 
-    console.log(result);
+      await popup.fire({
+        icon: "success",
+        title: "Login Successful",
+        text: result.message || "Welcome back.",
+      });
 
-    if (result.user) {
       localStorage.setItem("user", JSON.stringify(result.user));
       onLogin();
-    }
 
-    setFormData({
-      email: "",
-      password: "",
-    });
+      setFormData({
+        email: "",
+        password: "",
+      });
+    } catch (error) {
+      popup.fire({
+        icon: "error",
+        title: "Login Failed",
+        text: error.message || "Please check your email and password.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -56,7 +71,9 @@ function Login({ onLogin }) {
           onChange={handleChange}
         />
 
-        <button type="submit">Login</button>
+        <button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Logging in..." : "Login"}
+        </button>
       </form>
     </div>
   );

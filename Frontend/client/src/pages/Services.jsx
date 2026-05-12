@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 
-import { getServices, createBooking } from "../services/api";
+import {
+  createBooking,
+  createService,
+  deleteServiceById,
+  getServices,
+} from "../services/api";
+import popup, { showLoading } from "../utils/notifications";
 
 import "../styles/services.css";
 
@@ -21,6 +27,7 @@ function Services() {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [bookingServiceId, setBookingServiceId] = useState(null);
 
   const [bookingData, setBookingData] = useState({
     phone: "",
@@ -41,10 +48,18 @@ function Services() {
   const fetchServices = async () => {
     setLoading(true);
 
-    const data = await getServices();
-
-    setServices(data);
-    setLoading(false);
+    try {
+      const data = await getServices();
+      setServices(data);
+    } catch (error) {
+      popup.fire({
+        icon: "error",
+        title: "Services Unavailable",
+        text: error.message,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getImage = (serviceName) => {
@@ -62,68 +77,82 @@ function Services() {
   };
 
   const handleBooking = async (serviceId) => {
-
     const user = JSON.parse(localStorage.getItem("user"));
 
-    console.log("Logged user:", user);
-    console.log("Booking data:", bookingData);
-
     if (!user) {
-      alert("Please login first");
+      popup.fire({
+        icon: "warning",
+        title: "Login Required",
+        text: "Please login before booking a service.",
+      });
       return;
     }
 
-    if (
-      !bookingData.phone ||
-      !bookingData.booking_date ||
-      !bookingData.booking_time
-    ) {
-      alert("Please enter phone number, date and time");
+    const trimmedPhone = bookingData.phone.trim();
+
+    if (!trimmedPhone || !bookingData.booking_date || !bookingData.booking_time) {
+      popup.fire({
+        icon: "warning",
+        title: "Missing Booking Details",
+        text: "Please enter your phone number, booking date, and booking time.",
+      });
+      return;
+    }
+
+    if (!/^[0-9]{10}$/.test(trimmedPhone)) {
+      popup.fire({
+        icon: "warning",
+        title: "Invalid Phone Number",
+        text: "Please enter a valid 10-digit phone number.",
+      });
       return;
     }
 
     const finalBooking = {
       user_id: user.id,
       service_id: serviceId,
-      phone: bookingData.phone,
+      phone: trimmedPhone,
       booking_date: bookingData.booking_date,
       booking_time: bookingData.booking_time,
     };
 
-    console.log("Final booking:", finalBooking);
+    setBookingServiceId(serviceId);
+    showLoading("Booking Service", "Please wait while we confirm your booking.");
 
-    const result = await createBooking(finalBooking);
+    try {
+      const result = await createBooking(finalBooking);
 
-    console.log("Booking response:", result);
+      await popup.fire({
+        icon: "success",
+        title: "Booking Successful",
+        text: result.message || "Your service has been booked successfully.",
+      });
 
-    alert(result.message || JSON.stringify(result));
-
-    setBookingData({
-      phone: "",
-      booking_date: "",
-      booking_time: "",
-    });
+      setBookingData({
+        phone: "",
+        booking_date: "",
+        booking_time: "",
+      });
+    } catch (error) {
+      popup.fire({
+        icon: "error",
+        title: "Booking Failed",
+        text: error.message || "Unable to book this service right now.",
+      });
+    } finally {
+      setBookingServiceId(null);
+    }
   };
 
   const handleAddService = async (e) => {
     e.preventDefault();
 
-    const response = await fetch("http://127.0.0.1:8000/services", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    try {
+      const result = await createService({
         ...serviceData,
         price: Number(serviceData.price),
-      }),
-    });
+      });
 
-    const result = await response.json();
-
-    alert(result.message || result.detail || "Service added successfully");
-
-    if (response.ok) {
       setServiceData({
         service_name: "",
         description: "",
@@ -131,31 +160,51 @@ function Services() {
       });
 
       fetchServices();
+
+      popup.fire({
+        icon: "success",
+        title: "Service Added",
+        text: result.message || "Service added successfully.",
+      });
+    } catch (error) {
+      popup.fire({
+        icon: "error",
+        title: "Service Not Added",
+        text: error.message,
+      });
     }
   };
 
   const deleteService = async (serviceId) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this service?"
-    );
+    const confirmDelete = await popup.fire({
+      icon: "warning",
+      title: "Delete Service?",
+      text: "This service will be removed from the list.",
+      showCancelButton: true,
+      confirmButtonText: "Delete",
+      cancelButtonText: "Cancel",
+    });
 
-    if (!confirmDelete) {
+    if (!confirmDelete.isConfirmed) {
       return;
     }
 
-    const response = await fetch(
-      `http://127.0.0.1:8000/services/${serviceId}`,
-      {
-        method: "DELETE",
-      }
-    );
+    try {
+      const result = await deleteServiceById(serviceId);
 
-    const result = await response.json();
-
-    alert(result.message || result.detail || "Service deleted successfully");
-
-    if (response.ok) {
       fetchServices();
+
+      popup.fire({
+        icon: "success",
+        title: "Service Deleted",
+        text: result.message || "Service deleted successfully.",
+      });
+    } catch (error) {
+      popup.fire({
+        icon: "error",
+        title: "Delete Failed",
+        text: error.message,
+      });
     }
   };
 
@@ -293,8 +342,12 @@ function Services() {
             <h4>Rs. {service.price}</h4>
 
             {!isAdmin && (
-              <button type="button" onClick={() => handleBooking(service.id)}>
-                Book Service
+              <button
+                type="button"
+                onClick={() => handleBooking(service.id)}
+                disabled={bookingServiceId !== null}
+              >
+                {bookingServiceId === service.id ? "Booking..." : "Book Service"}
               </button>
             )}
 

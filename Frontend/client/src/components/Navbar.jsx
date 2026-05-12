@@ -1,3 +1,4 @@
+import { toast } from "../utils/notifications";
 import "../styles/navbar.css";
 
 function Navbar() {
@@ -8,9 +9,14 @@ function Navbar() {
 
     localStorage.removeItem("user");
 
-    alert("Logged out successfully");
+    toast.fire({
+      icon: "success",
+      title: "Logged out successfully",
+    });
 
-    window.location.reload();
+    setTimeout(() => {
+      window.location.reload();
+    }, 600);
   };
 
   return (

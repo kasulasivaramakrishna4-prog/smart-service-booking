@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
+import {
+  deleteBookingById,
+  getBookings,
+  updateBookingStatus,
+} from "../services/api";
+import popup, { showLoading } from "../utils/notifications";
 import "../styles/bookings.css";
-
-const BASE_URL = "https://smart-service-booking-pvje.onrender.com";
 
 function Bookings() {
   const [bookings, setBookings] = useState([]);
@@ -10,47 +14,74 @@ function Bookings() {
     fetchBookings();
   }, []);
 
-  const fetchBookings = () => {
-    fetch(`${BASE_URL}/bookings`)
-      .then((res) => res.json())
-      .then((data) => setBookings(data))
-      .catch((error) => console.log("Bookings error:", error));
+  const fetchBookings = async () => {
+    try {
+      const data = await getBookings();
+      setBookings(data);
+    } catch (error) {
+      popup.fire({
+        icon: "error",
+        title: "Bookings Unavailable",
+        text: error.message,
+      });
+    }
   };
 
   const updateStatus = async (bookingId, status) => {
-    await fetch(`${BASE_URL}/bookings/${bookingId}/status`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        status: status,
-      }),
-    });
+    showLoading("Updating Booking", "Please wait while the status is saved.");
 
-    alert("Status updated successfully");
+    try {
+      await updateBookingStatus(bookingId, status);
 
-    fetchBookings();
+      await popup.fire({
+        icon: "success",
+        title: "Status Updated",
+        text: "Booking status updated successfully.",
+      });
+
+      fetchBookings();
+    } catch (error) {
+      popup.fire({
+        icon: "error",
+        title: "Update Failed",
+        text: error.message,
+      });
+    }
   };
 
   const deleteBooking = async (bookingId) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this booking?"
-    );
+    const confirmDelete = await popup.fire({
+      icon: "warning",
+      title: "Delete Booking?",
+      text: "This booking will be permanently removed.",
+      showCancelButton: true,
+      confirmButtonText: "Delete",
+      cancelButtonText: "Cancel",
+    });
 
-    if (!confirmDelete) {
+    if (!confirmDelete.isConfirmed) {
       return;
     }
 
-    const response = await fetch(`${BASE_URL}/bookings/${bookingId}`, {
-      method: "DELETE",
-    });
+    showLoading("Deleting Booking", "Please wait while the booking is removed.");
 
-    const result = await response.json();
+    try {
+      const result = await deleteBookingById(bookingId);
 
-    alert(result.message || "Booking deleted successfully");
+      await popup.fire({
+        icon: "success",
+        title: "Booking Deleted",
+        text: result.message || "Booking deleted successfully.",
+      });
 
-    fetchBookings();
+      fetchBookings();
+    } catch (error) {
+      popup.fire({
+        icon: "error",
+        title: "Delete Failed",
+        text: error.message,
+      });
+    }
   };
 
   return (

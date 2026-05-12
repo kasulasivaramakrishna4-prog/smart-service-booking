@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { getServices } from "../services/api";
+import { getBookings, getServices } from "../services/api";
+import popup from "../utils/notifications";
 import "../styles/dashboard.css";
 
 function Dashboard() {
@@ -11,13 +12,21 @@ function Dashboard() {
   }, []);
 
   const fetchDashboardData = async () => {
-    const servicesData = await getServices();
+    try {
+      const [servicesData, bookingsData] = await Promise.all([
+        getServices(),
+        getBookings(),
+      ]);
 
-    const bookingsResponse = await fetch("http://127.0.0.1:8000/bookings");
-    const bookingsData = await bookingsResponse.json();
-
-    setServices(servicesData);
-    setBookings(bookingsData);
+      setServices(servicesData);
+      setBookings(bookingsData);
+    } catch (error) {
+      popup.fire({
+        icon: "error",
+        title: "Dashboard Unavailable",
+        text: error.message,
+      });
+    }
   };
 
   const pending = bookings.filter((b) => b.status === "Pending").length;
