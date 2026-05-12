@@ -62,7 +62,6 @@ function Services() {
   };
 
   const handleBooking = async (serviceId) => {
-    alert("Book button clicked");
 
     const user = JSON.parse(localStorage.getItem("user"));
 
